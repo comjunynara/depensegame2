@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forest Schedule</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700&family=Nanum+Myeongjo:wght@700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Pretendard', 'sans-serif'],
+            serif: ['Nanum Myeongjo', 'serif'],
+          },
+          colors: {
+            forest: {
+              50: '#f4f8f4',
+              100: '#e5efe6',
+              200: '#cce1cf',
+              300: '#a5caa9',
+              400: '#76ac7c',
+              500: '#528f59',
+              600: '#3d7243',
+              700: '#325b37',
+              800: '#2a492e',
+              900: '#1b3520',
+              950: '#0d1f11',
+            },
+            leaf: {
+              light: '#d9f99d',
+              DEFAULT: '#a3e635',
+              glow: '#84cc16',
+              dark: '#65a30d',
+            },
+            mist: {
+              50: '#f8fafc',
+              100: '#f1f5f9',
+              200: '#e2e8f0',
+              300: '#cbd5e1',
+              400: '#94a3b8',
+              500: '#64748b',
+              600: '#475569',
+              700: '#334155',
+              800: '#1e293b',
+            }
+          },
+          animation: {
+            'float': 'float 6s ease-in-out infinite',
+            'sway': 'sway 4s ease-in-out infinite alternate',
+            'pulse-soft': 'pulseSoft 3s ease-in-out infinite',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-8px)' },
+            },
+            sway: {
+              '0%': { transform: 'rotate(-2deg)' },
+              '100%': { transform: 'rotate(2deg)' },
+            },
+            pulseSoft: {
+              '0%, 100%': { opacity: 1, transform: 'scale(1)' },
+              '50%': { opacity: 0.85, transform: 'scale(1.02)' },
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* 커스텀 스크롤바 */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #a5caa9;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #76ac7c;
+    }
+    
+    /* 숲속 배경 그라데이션 패턴 */
+    .forest-bg {
+      background: linear-gradient(135deg, #f3f7f4 0%, #e8f1e9 50%, #e2ece3 100%);
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(165, 202, 169, 0.35);
+    }
+    .glass-dark {
+      background: rgba(27, 53, 32, 0.92);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(163, 230, 53, 0.2);
+    }
+    .leaf-pattern {
+      background-image: radial-gradient(#76ac7c 0.75px, transparent 0.75px), radial-gradient(#a3e635 0.75px, #f3f7f4 0.75px);
+      background-size: 30px 30px;
+      background-position: 0 0, 15px 15px;
+      background-opacity: 0.15;
+    }
+  </style>
+</head>
+<body class="forest-bg text-mist-800 font-sans min-h-screen flex flex-col selection:bg-leaf selection:text-forest-900">
+
+  <!-- 상단 네비게이션 & 헤더 -->
+  <header class="sticky top-0 z-40 glass-card border-b border-forest-200/60 shadow-sm transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      
+      <!-- 로고 및 타이틀 -->
+      <div class="flex items-center space-x-3.5">
+        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-forest-700 via-forest-800 to-forest-900 flex items-center justify-center text-leaf shadow-md shadow-forest-900/20 group">
+          <i class="fa-solid fa-tree text-2xl group-hover:scale-110 transition-transform duration-300"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-forest-900 font-serif">Forest Schedule</h1>
+          </div>
+          <p class="text-xs text-mist-500 hidden sm:block">차분한 자연 속에서 가꾸는 나의 하루</p>
+        </div>
+      </div>
+
+      <!-- 뷰 모드 탭 (월간, 주간, 성장 숲, 포모도로 타이머) -->
+      <div class="flex items-center bg-mist-100/90 p-1.5 rounded-2xl border border-mist-200/80 shadow-inner">
+        <button id="viewMonthBtn" onclick="switchView('month')" class="px-3.5 py-1.5 text-xs sm:text-sm font-medium rounded-xl transition-all flex items-center space-x-1.5 bg-white text-forest-800 shadow-sm">
+          <i class="fa-regular fa-calendar-days text-forest-600"></i>
+          <span>달력</span>
+        </button>
+        <button id="viewAgendaBtn" onclick="switchView('agenda')" class="px-3.5 py-1.5 text-xs sm:text-sm font-medium rounded-xl transition-all flex items-center space-x-1.5 text-mist-600 hover:text-forest-700">
+          <i class="fa-solid fa-list-check"></i>
+          <span>일정 목록</span>
+        </button>
+        <button id="viewGrowthBtn" onclick="switchView('growth')" class="px-3.5 py-1.5 text-xs sm:text-sm font-medium rounded-xl transition-all flex items-center space-x-1.5 text-mist-600 hover:text-forest-700">
+          <i class="fa-solid fa-seedling text-leaf-dark"></i>
+          <span class="hidden sm:inline">나의 작은 숲</span>
+        </button>
+        <button id="viewFocusBtn" onclick="switchView('focus')" class="px-3.5 py-1.5 text-xs sm:text-sm font-medium rounded-xl transition-all flex items-center space-x-1.5 text-mist-600 hover:text-forest-700">
+          <i class="fa-solid fa-hourglass-half text-forest-500"></i>
+          <span class="hidden sm:inline">집중 타이머</span>
+        </button>
+      </div>
+
+      <!-- 우측 사운드 & 새 일정 버튼 -->
+      <div class="flex items-center space-x-2.5">
+        <!-- 숲속 앰비언스 사운드 버튼 (Web Audio API) -->
+        <button id="ambientSoundBtn" onclick="toggleForestSound()" title="숲속 자연 소리 듣기" class="w-10 h-10 rounded-xl bg-forest-50 hover:bg-forest-100 border border-forest-200 text-forest-700 flex items-center justify-center transition shadow-sm relative group">
+          <i id="ambientIcon" class="fa-solid fa-volume-xmark text-sm"></i>
+          <span class="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-forest-900 text-white text-[10px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap pointer-events-none z-50">숲의 소리 (BGM)</span>
+        </button>
+
+        <!-- 새 일정 등록 버튼 -->
+        <button onclick="openScheduleModal()" class="bg-gradient-to-r from-forest-700 to-forest-800 hover:from-forest-800 hover:to-forest-900 text-white font-medium text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-md hover:shadow-lg shadow-forest-900/15 flex items-center space-x-2 transition transform active:scale-95">
+          <i class="fa-solid fa-plus text-leaf"></i>
+          <span class="hidden xs:inline">일정 추가</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- 메인 컨테이너 -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full space-y-6">
+
+    <!-- 상단 숲속 오늘의 영감 & 통계 요약 바 -->
+    <section class="glass-card rounded-3xl p-5 sm:p-6 shadow-sm border border-forest-200/50 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative overflow-hidden">
+      <div class="absolute -right-10 -bottom-10 opacity-5 pointer-events-none text-forest-900">
+        <i class="fa-solid fa-leaf text-9xl"></i>
+      </div>
+
+      <div class="flex items-center space-x-4 z-10">
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-forest-100 to-leaf-light/40 border border-forest-200 flex items-center justify-center text-forest-700 text-2xl shadow-inner animate-sway">
+          🌿
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span id="todayGreeting" class="text-xs font-semibold uppercase tracking-wider text-forest-600 bg-forest-100/80 px-2 py-0.5 rounded-md">오늘의 숲</span>
+            <span id="currentDateString" class="text-xs text-mist-500 font-medium"></span>
+          </div>
+          <p id="natureQuote" class="text-sm sm:text-base font-semibold text-forest-900 mt-1 font-serif">
+            "나무처럼 흔들리되 깊게 뿌리내리는 하루를 보내세요."
+          </p>
+        </div>
+      </div>
+
+      <!-- 진행률 위젯 -->
+      <div class="w-full md:w-auto flex items-center justify-between md:justify-end gap-6 pt-3 md:pt-0 border-t md:border-t-0 border-forest-100 z-10">
+        <div class="text-center sm:text-right">
+          <p class="text-xs text-mist-500 font-medium">오늘 완료된 일정</p>
+          <p class="text-lg sm:text-xl font-bold text-forest-800"><span id="todayDoneCount" class="text-leaf-dark">0</span> / <span id="todayTotalCount">0</span></p>
+        </div>
+        <div class="flex items-center space-x-3">
+          <div class="w-32 bg-mist-200 rounded-full h-3 overflow-hidden p-0.5 border border-mist-300">
+            <div id="todayProgressBar" class="bg-gradient-to-r from-forest-500 via-leaf to-leaf-glow h-full rounded-full transition-all duration-700" style="width: 0%"></div>
+          </div>
+          <span id="todayProgressText" class="text-xs font-bold text-forest-700 min-w-[36px]">0%</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- [VIEW 1] 달력 뷰 (Month View) -->
+    <div id="monthViewSection" class="grid grid-cols-1 lg:grid-cols-12 gap-6 transition-all duration-300">
+      
+      <!-- 좌측 메인 캘린더 (8 cols) -->
+      <div class="lg:col-span-8 space-y-4">
+        <div class="glass-card rounded-3xl p-5 sm:p-7 shadow-sm border border-forest-200/60">
+          
+          <!-- 캘린더 네비게이터 컨트롤 -->
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+            <div class="flex items-center space-x-3">
+              <h2 id="calendarTitle" class="text-xl sm:text-2xl font-bold text-forest-900 font-serif"></h2>
+              <button onclick="goToToday()" class="text-xs px-2.5 py-1 bg-forest-100 hover:bg-forest-200 text-forest-800 rounded-lg transition font-medium border border-forest-300/60">
+                오늘
+              </button>
+            </div>
+
+            <div class="flex items-center space-x-1.5">
+              <button onclick="changeMonth(-1)" class="w-9 h-9 rounded-xl bg-mist-100 hover:bg-forest-100 hover:text-forest-800 text-mist-600 flex items-center justify-center transition border border-mist-200">
+                <i class="fa-solid fa-chevron-left text-xs"></i>
+              </button>
+              <button onclick="changeMonth(1)" class="w-9 h-9 rounded-xl bg-mist-100 hover:bg-forest-100 hover:text-forest-800 text-mist-600 flex items-center justify-center transition border border-mist-200">
+                <i class="fa-solid fa-chevron-right text-xs"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- 요일 헤더 -->
+          <div class="grid grid-cols-7 gap-1 text-center font-semibold text-xs text-mist-500 mb-2 py-2 bg-forest-50/70 rounded-xl border border-forest-100">
+            <span class="text-rose-500">일</span>
+            <span>월</span>
+            <span>화</span>
+            <span>수</span>
+            <span>목</span>
+            <span>금</span>
+            <span class="text-forest-600">토</span>
+          </div>
+
+          <!-- 캘린더 날짜 그리드 -->
+          <div id="calendarGrid" class="grid grid-cols-7 gap-1 sm:gap-2">
+            <!-- JS 렌더링 -->
+          </div>
+
+          <!-- 범례 -->
+          <div class="flex flex-wrap items-center justify-between text-xs text-mist-500 mt-6 pt-4 border-t border-forest-100 gap-2">
+            <div class="flex items-center space-x-4">
+              <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-forest-600"></span><span>업무/학업</span></span>
+              <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-leaf-glow"></span><span>일상/루틴</span></span>
+              <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span><span>휴식/힐링</span></span>
+              <span class="flex items-center space-x-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span><span>약속/이벤트</span></span>
+            </div>
+            <div class="text-forest-600 flex items-center space-x-1">
+              <i class="fa-solid fa-circle-info text-[10px]"></i>
+              <span>날짜를 클릭해 상세 일정을 확인하세요.</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 우측 선택된 날짜의 일정 상세 및 추가 패널 (4 cols) -->
+      <div class="lg:col-span-4 space-y-5">
+        
+        <!-- 선택된 날짜 상세 카드 -->
+        <div class="glass-card rounded-3xl p-5 sm:p-6 shadow-sm border border-forest-200/60 flex flex-col h-full">
+          <div class="flex items-center justify-between pb-4 border-b border-forest-100 mb-4">
+            <div>
+              <span class="text-xs text-forest-600 font-semibold tracking-wider">SELECTED DATE</span>
+              <h3 id="selectedDateHeading" class="text-lg font-bold text-forest-900 font-serif"></h3>
+            </div>
+            <button onclick="openScheduleModal(selectedDateISO)" class="w-8 h-8 rounded-xl bg-forest-100 hover:bg-forest-200 text-forest-800 flex items-center justify-center transition shadow-sm" title="이 날짜에 새 일정 추가">
+              <i class="fa-solid fa-plus text-xs"></i>
+            </button>
+          </div>
+
+          <!-- 선택된 날짜 일정 리스트 -->
+          <div id="selectedDateScheduleList" class="space-y-3 flex-1 overflow-y-auto max-h-[380px] pr-1">
+            <!-- JS로 동적 생성 -->
+          </div>
+
+          <!-- 빠른 일정 추가 간이 폼 -->
+          <div class="mt-4 pt-4 border-t border-forest-100">
+            <form onsubmit="handleQuickAdd(event)" class="flex gap-2">
+              <input type="text" id="quickTaskInput" placeholder="선택한 날짜에 빠른 할 일 추가..." class="flex-1 text-xs px-3.5 py-2.5 rounded-xl border border-mist-300 bg-white/90 focus:outline-none focus:ring-2 focus:ring-forest-500 focus:border-forest-500 placeholder-mist-400" required>
+              <button type="submit" class="bg-forest-700 hover:bg-forest-800 text-leaf px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center justify-center">
+                <i class="fa-solid fa-arrow-turn-down-left"></i>
+              </button>
+            </form>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- [VIEW 2] 전체 일정 목록 및 필터/검색 (Agenda View) -->
+    <div id="agendaViewSection" class="hidden space-y-6">
+      
+      <!-- 필터 및 검색 바 -->
+      <div class="glass-card rounded-2xl p-4 shadow-sm border border-forest-200/60 flex flex-col md:flex-row items-center justify-between gap-4">
+        
+        <!-- 카테고리 필터 태그들 -->
+        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          <button onclick="setFilterCategory('all')" class="cat-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-forest-800 text-white transition active-cat" data-cat="all">전체보기</button>
+          <button onclick="setFilterCategory('work')" class="cat-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-mist-100 text-mist-600 hover:bg-forest-100 transition" data-cat="work">🌲 업무/학업</button>
+          <button onclick="setFilterCategory('routine')" class="cat-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-mist-100 text-mist-600 hover:bg-forest-100 transition" data-cat="routine">🌿 일상/루틴</button>
+          <button onclick="setFilterCategory('wellness')" class="cat-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-mist-100 text-mist-600 hover:bg-forest-100 transition" data-cat="wellness">🍃 휴식/힐링</button>
+          <button onclick="setFilterCategory('event')" class="cat-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-mist-100 text-mist-600 hover:bg-forest-100 transition" data-cat="event">🌸 약속/이벤트</button>
+        </div>
+
+        <!-- 검색창 및 상태 필터 -->
+        <div class="flex items-center space-x-2 w-full md:w-auto">
+          <div class="relative flex-1 md:w-64">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-mist-400 text-xs"></i>
+            <input type="text" id="searchInput" oninput="handleSearch(this.value)" placeholder="일정 제목 또는 메모 검색..." class="w-full text-xs pl-8 pr-3 py-2 rounded-xl border border-mist-300 bg-white/90 focus:outline-none focus:ring-2 focus:ring-forest-500">
+          </div>
+          <select id="statusFilter" onchange="handleStatusFilter(this.value)" class="text-xs px-3 py-2 rounded-xl border border-mist-300 bg-white/90 focus:outline-none focus:ring-2 focus:ring-forest-500 text-mist-700">
+            <option value="all">모든 상태</option>
+            <option value="pending">진행 중</option>
+            <option value="completed">완료됨</option>
+          </select>
+        </div>
+
+      </div>
+
+      <!-- 일정 아젠다 리스트 컨테이너 -->
+      <div id="agendaListContainer" class="space-y-4">
+        <!-- JS 생성 -->
+      </div>
+
+    </div>
+
+    <!-- [VIEW 3] 나의 작은 숲 & 습관/달성 시각화 (Growth View) -->
+    <div id="growthViewSection" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <div class="lg:col-span-7 glass-card rounded-3xl p-6 sm:p-8 shadow-sm border border-forest-200/60 flex flex-col items-center justify-between text-center relative overflow-hidden">
+        <div class="w-full text-left">
+          <span class="text-xs font-bold text-forest-600 tracking-wider">FOREST GARDEN</span>
+          <h2 class="text-xl sm:text-2xl font-bold text-forest-900 font-serif mt-0.5">내가 가꾼 일정의 숲</h2>
+          <p class="text-xs sm:text-sm text-mist-500">일정을 완수할 때마다 작은 씨앗이 웅장한 거목으로 자라납니다.</p>
+        </div>
+
+        <!-- 인터랙티브 반응형 나무 그래픽 (SVG) -->
+        <div class="my-6 relative flex flex-col items-center justify-center min-h-[260px] w-full">
+          <div id="treeGraphicContainer" class="transition-all duration-700 transform hover:scale-105">
+            <!-- SVG 동적 삽입 -->
+          </div>
+          <div class="mt-4 px-4 py-1.5 rounded-full bg-forest-100 text-forest-800 text-xs font-semibold border border-forest-300/60 shadow-sm flex items-center space-x-2">
+            <i class="fa-solid fa-award text-leaf-glow"></i>
+            <span id="treeStatusText">성장 단계: 푸른 어린 묘목</span>
+          </div>
+        </div>
+
+        <!-- 숲 레벨 및 보너스 정보 -->
+        <div class="w-full bg-forest-50/80 rounded-2xl p-4 border border-forest-200/60 flex items-center justify-around text-center">
+          <div>
+            <p class="text-xs text-mist-500">완료한 총 일정</p>
+            <p id="totalCompletedTasksCount" class="text-lg font-bold text-forest-900">0개</p>
+          </div>
+          <div class="h-8 w-px bg-forest-200"></div>
+          <div>
+            <p class="text-xs text-mist-500">숲 생명력</p>
+            <p id="forestEnergyPercent" class="text-lg font-bold text-leaf-dark">0 XP</p>
+          </div>
+          <div class="h-8 w-px bg-forest-200"></div>
+          <div>
+            <p class="text-xs text-mist-500">연속 실천</p>
+            <p id="streakDays" class="text-lg font-bold text-emerald-700">3일째 🍃</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 우측 카테고리별 일정 분포 & 통계 차트 -->
+      <div class="lg:col-span-5 space-y-6">
+        <div class="glass-card rounded-3xl p-6 shadow-sm border border-forest-200/60">
+          <h3 class="text-base font-bold text-forest-900 mb-4 flex items-center space-x-2 font-serif">
+            <i class="fa-solid fa-chart-pie text-forest-600"></i>
+            <span>카테고리별 일정 밸런스</span>
+          </h3>
+          
+          <div id="categoryStatsContainer" class="space-y-3.5">
+            <!-- JS로 프로그레스 바 생성 -->
+          </div>
+        </div>
+
+        <!-- 힐링 팁 카드 -->
+        <div class="glass-dark text-white rounded-3xl p-6 shadow-md relative overflow-hidden">
+          <div class="relative z-10 space-y-2">
+            <div class="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-leaf/20 text-leaf text-xs font-semibold border border-leaf/30">
+              <i class="fa-solid fa-spa"></i>
+              <span>숲속의 지혜</span>
+            </div>
+            <h4 class="text-base font-bold font-serif text-leaf-light">무리하지 않는 지속가능한 일정</h4>
+            <p class="text-xs text-mist-300 leading-relaxed">
+              하루에 3가지 중요한 일(Big 3)을 선정하고 여유 시간을 20% 남겨두세요. 숲도 여백이 있어야 바람이 통합니다.
+            </p>
+          </div>
+          <div class="absolute -bottom-6 -right-6 text-leaf opacity-10">
+            <i class="fa-solid fa-seedling text-8xl"></i>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- [VIEW 4] 포모도로 집중 타이머 뷰 (Focus View) -->
+    <div id="focusViewSection" class="hidden">
+      <div class="max-w-2xl mx-auto glass-card rounded-3xl p-8 shadow-sm border border-forest-200/60 text-center space-y-6">
+        
+        <div>
+          <span class="text-xs font-bold text-forest-600 tracking-wider">FOREST FOCUS</span>
+          <h2 class="text-2xl font-bold text-forest-900 font-serif mt-1">숲속 집중 타이머</h2>
+          <p class="text-xs text-mist-500">잡념을 비우고 바람 소리와 함께 온전히 몰입하세요.</p>
+        </div>
+
+        <!-- 원형 타이머 표시 -->
+        <div class="relative w-64 h-64 mx-auto flex items-center justify-center">
+          <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="44" stroke="#e2e8f0" stroke-width="6" fill="transparent" />
+            <circle id="timerCircle" cx="50" cy="50" r="44" stroke="#528f59" stroke-width="6" stroke-linecap="round" fill="transparent" stroke-dasharray="276.46" stroke-dashoffset="0" class="transition-all duration-1000" />
+          </svg>
+          <div class="absolute flex flex-col items-center">
+            <span id="timerDisplay" class="text-5xl font-extrabold text-forest-900 font-mono tracking-tight">25:00</span>
+            <span id="timerModeLabel" class="text-xs font-semibold text-leaf-dark uppercase tracking-widest mt-1">집중 모드</span>
+          </div>
+        </div>
+
+        <!-- 타이머 제어 버튼 -->
+        <div class="flex items-center justify-center space-x-4">
+          <button id="timerToggleBtn" onclick="toggleTimer()" class="bg-forest-800 hover:bg-forest-900 text-white px-8 py-3 rounded-2xl font-semibold text-sm shadow-md transition transform active:scale-95 flex items-center space-x-2">
+            <i id="timerBtnIcon" class="fa-solid fa-play text-leaf"></i>
+            <span id="timerBtnText">시작하기</span>
+          </button>
+          <button onclick="resetTimer()" class="w-12 h-12 rounded-2xl bg-mist-100 hover:bg-mist-200 text-mist-600 flex items-center justify-center transition border border-mist-200" title="리셋">
+            <i class="fa-solid fa-rotate-left"></i>
+          </button>
+        </div>
+
+        <!-- 타이머 모드 선택 -->
+        <div class="flex items-center justify-center space-x-2 pt-2">
+          <button onclick="setTimerDuration(25, 'focus')" class="px-3.5 py-1.5 rounded-xl text-xs font-medium bg-forest-100 text-forest-800 border border-forest-200">25분 집중</button>
+          <button onclick="setTimerDuration(50, 'deep')" class="px-3.5 py-1.5 rounded-xl text-xs font-medium bg-mist-100 text-mist-600 hover:bg-mist-200">50분 몰입</button>
+          <button onclick="setTimerDuration(5, 'shortBreak')" class="px-3.5 py-1.5 rounded-xl text-xs font-medium bg-mist-100 text-mist-600 hover:bg-mist-200">5분 휴식</button>
+          <button onclick="setTimerDuration(15, 'longBreak')" class="px-3.5 py-1.5 rounded-xl text-xs font-medium bg-mist-100 text-mist-600 hover:bg-mist-200">15분 산책</button>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- 푸터 -->
+  <footer class="mt-auto border-t border-forest-200/50 bg-white/50 backdrop-blur-sm py-4 text-center text-xs text-mist-500">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-leaf text-forest-600"></i>
+        <span class="font-medium text-forest-900">Forest Schedule</span>
+        <span>— 자연과 함께 호흡하는 스케줄 플래너</span>
+      </div>
+      <p class="text-mist-400">당신의 모든 일상이 푸르게 번창하길 바랍니다.</p>
+    </div>
+  </footer>
+
+  <!-- 일정 추가/수정 모달 -->
+  <div id="scheduleModal" class="fixed inset-0 z-50 bg-forest-950/40 backdrop-blur-sm flex items-center justify-center p-4 hidden opacity-0 transition-opacity duration-300">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-forest-200/80 transform scale-95 transition-transform duration-300" id="modalCard">
+      
+      <div class="flex items-center justify-between pb-4 border-b border-forest-100">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-8 h-8 rounded-xl bg-forest-100 text-forest-700 flex items-center justify-center">
+            <i class="fa-solid fa-feather-pointed"></i>
+          </div>
+          <h3 id="modalTitle" class="text-lg font-bold text-forest-900 font-serif">새 일정 등록</h3>
+        </div>
+        <button onclick="closeScheduleModal()" class="w-8 h-8 rounded-xl hover:bg-mist-100 text-mist-400 hover:text-mist-600 flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="scheduleForm" onsubmit="handleScheduleSubmit(event)" class="space-y-4 mt-4">
+        <input type="hidden" id="editScheduleId">
+
+        <!-- 일정 제목 -->
+        <div>
+          <label class="block text-xs font-semibold text-mist-700 mb-1">일정 제목 <span class="text-rose-500">*</span></label>
+          <input type="text" id="formTitle" required placeholder="예: 자연 속 아침 산책 및 독서" class="w-full text-sm px-3.5 py-2.5 rounded-xl border border-mist-300 bg-forest-50/30 focus:outline-none focus:ring-2 focus:ring-forest-500 focus:bg-white transition">
+        </div>
+
+        <!-- 날짜 및 시간 선택 -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-mist-700 mb-1">날짜 <span class="text-rose-500">*</span></label>
+            <input type="date" id="formDate" required class="w-full text-xs px-3 py-2 rounded-xl border border-mist-300 bg-forest-50/30 focus:outline-none focus:ring-2 focus:ring-forest-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-mist-700 mb-1">시작 시간</label>
+            <input type="time" id="formStartTime" class="w-full text-xs px-3 py-2 rounded-xl border border-mist-300 bg-forest-50/30 focus:outline-none focus:ring-2 focus:ring-forest-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-mist-700 mb-1">종료 시간</label>
+            <input type="time" id="formEndTime" class="w-full text-xs px-3 py-2 rounded-xl border border-mist-300 bg-forest-50/30 focus:outline-none focus:ring-2 focus:ring-forest-500">
+          </div>
+        </div>
+
+        <!-- 카테고리 & 우선순위 -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-mist-700 mb-1">카테고리</label>
+            <select id="formCategory" class="w-full text-xs px-3 py-2 rounded-xl border border-mist-300 bg-forest-50/30 focus:outline-none focus:ring-2 focus:ring-forest-500">
+              <option value="routine">🌿 일상 / 루틴</option>
+              <option value="work">🌲 업무 / 학업</option>
+              <option value="wellness">🍃 휴식 / 웰니스</option>
+              <option value="event">🌸 약속 / 이벤트</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-mist-700 mb-1">중요도</label>
+            <select id="formPriority" class="w-full text-xs px-3 py-2 rounded-xl border border-mist-300 bg-forest-50/30 focus:outline-none focus:ring-2 focus:ring-forest-500">
+              <option value="medium">보통 (Normal)</option>
+              <option value="high">높음 (High 🌿)</option>
+              <option value="low">낮음 (Low)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 메모/노트 -->
+        <div>
+          <label class="block text-xs font-semibold text-mist-700 mb-1">상세 메모 (선택)</label>
+          <textarea id="formNotes" rows="3" placeholder="준비물, 장소, 세부 다짐 등을 적어보세요..." class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-mist-300 bg-forest-50/30 focus:outline-none focus:ring-2 focus:ring-forest-500"></textarea>
+        </div>
+
+        <!-- 버튼 액션 -->
+        <div class="flex items-center justify-end space-x-2.5 pt-3 border-t border-forest-100">
+          <button type="button" onclick="closeScheduleModal()" class="px-4 py-2 rounded-xl text-xs font-medium text-mist-600 hover:bg-mist-100 transition">취소</button>
+          <button type="submit" class="bg-forest-800 hover:bg-forest-900 text-white text-xs font-semibold px-5 py-2.5 rounded-xl shadow-md transition flex items-center space-x-1.5">
+            <i class="fa-solid fa-check text-leaf"></i>
+            <span id="modalSubmitText">저장하기</span>
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- 토스트 알림 컴포넌트 -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="bg-forest-900 text-white text-xs sm:text-sm font-medium px-4 py-3 rounded-2xl shadow-xl border border-leaf/40 flex items-center space-x-2.5">
+      <i id="toastIcon" class="fa-solid fa-circle-check text-leaf"></i>
+      <span id="toastMessage">작업이 완료되었습니다.</span>
+    </div>
+  </div>
+
+  <!-- ================= JAVASCRIPT LOGIC ================= -->
+  <script>
+    /* -------------------------------------------------------------
+     * 1. 전역 상태 및 기본 데이터 정의
+     * ----------------------------------------------------------- */
+    const today = new Date();
+    let currentYear = today.getFullYear();
+    let currentMonth = today.getMonth(); // 0-based
+    let selectedDateISO = formatDateToISO(today);
+    let activeFilterCategory = 'all';
+    let activeStatusFilter = 'all';
+    let activeSearchQuery = '';
+
+    // 기본 자연 명언 목록
+    const natureQuotes = [
+      "나무처럼 흔들리되 깊게 뿌리내리는 하루를 보내세요.",
+      "숲은 서두르지 않지만 모든 것을 이루어냅니다.",
+      "맑은 이슬 한 방울이 모여 싱그러운 숲을 만듭니다.",
+      "조용한 숲길을 걷듯 차분하고 고요하게 몰입하세요.",
+      "작은 묘목도 햇살과 비를 맞으며 거목이 됩니다."
+    ];
+
+    // 초기 샘플 스케줄 데이터
+    const initialSchedules = [
+      {
+        id: 'task-1',
+        title: '아침 햇살 산책 및 스트레칭',
+        date: formatDateToISO(today),
+        startTime: '07:30',
+        endTime: '08:00',
+        category: 'wellness',
+        priority: 'high',
+        notes: '가벼운 발걸음으로 공원 한 바퀴 돌며 심호흡하기',
+        completed: true
+      },
+      {
+        id: 'task-2',
+        title: '프로젝트 핵심 기능 기획서 정리',
+        date: formatDateToISO(today),
+        startTime: '10:00',
+        endTime: '12:00',
+        category: 'work',
+        priority: 'high',
+        notes: '자연 친화적 UI 인터페이스 설계안 검토',
+        completed: false
+      },
+      {
+        id: 'task-3',
+        title: '허브차 마시며 15분 명상',
+        date: formatDateToISO(today),
+        startTime: '15:00',
+        endTime: '15:20',
+        category: 'routine',
+        priority: 'medium',
+        notes: '페퍼민트 티와 함께 뇌 휴식',
+        completed: false
+      },
+      {
+        id: 'task-4',
+        title: '친구와 저녁 식사 약속',
+        date: getOffsetDateISO(1),
+        startTime: '18:30',
+        endTime: '20:30',
+        category: 'event',
+        priority: 'medium',
+        notes: '초록 정원이 있는 샐러드 카페에서 만나기',
+        completed: false
+      },
+      {
+        id: 'task-5',
+        title: '스케줄 및 주간 목표 회고',
+        date: getOffsetDateISO(3),
+        startTime: '20:00',
+        endTime: '21:00',
+        category: 'routine',
+        priority: 'low',
+        notes: '이번 주에 잘한 점 3가지 기록하기',
+        completed: false
+      }
+    ];
+
+    let schedules = JSON.parse(JSON.stringify(initialSchedules));
+
+    /* -------------------------------------------------------------
+     * 2. 날짜 관련 헬퍼 함수
+     * ----------------------------------------------------------- */
+    function formatDateToISO(dateObj) {
+      const y = dateObj.getFullYear();
+      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const d = String(dateObj.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function getOffsetDateISO(daysOffset) {
+      const d = new Date();
+      d.setDate(d.getDate() + daysOffset);
+      return formatDateToISO(d);
+    }
+
+    function getKoreanDateLabel(isoStr) {
+      const [y, m, d] = isoStr.split('-');
+      const dateObj = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+      const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+      return `${parseInt(m)}월 ${parseInt(d)}일 (${dayNames[dateObj.getDay()]})`;
+    }
+
+    /* -------------------------------------------------------------
+     * 3. 초기화 & 렌더링 오케스트레이션
+     * ----------------------------------------------------------- */
+    window.addEventListener('DOMContentLoaded', () => {
+      // 상단 날짜 및 명언 세팅
+      document.getElementById('currentDateString').textContent = getKoreanDateLabel(formatDateToISO(today));
+      document.getElementById('natureQuote').textContent = `"${natureQuotes[Math.floor(Math.random() * natureQuotes.length)]}"`;
+      
+      // 모달 폼 기본값 세팅
+      document.getElementById('formDate').value = selectedDateISO;
+
+      renderAll();
+    });
+
+    function renderAll() {
+      renderCalendar();
+      renderSelectedDateView();
+      renderAgendaView();
+      renderGrowthGarden();
+      updateTodaySummary();
+    }
+
+    /* -------------------------------------------------------------
+     * 4. 캘린더 (달력) 렌더링 로직
+     * ----------------------------------------------------------- */
+    function renderCalendar() {
+      const monthNames = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"];
+      document.getElementById('calendarTitle').textContent = `${currentYear}년 ${monthNames[currentMonth]}`;
+
+      const grid = document.getElementById('calendarGrid');
+      grid.innerHTML = '';
+
+      const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+      const lastDate = new Date(currentYear, currentMonth + 1, 0).getDate();
+      const prevMonthLastDate = new Date(currentYear, currentMonth, 0).getDate();
+
+      // 이전 달 빈 날짜 칸들
+      for (let i = firstDayIndex - 1; i >= 0; i--) {
+        const d = prevMonthLastDate - i;
+        const cell = createDateCell(d, true, false, null);
+        grid.appendChild(cell);
+      }
+
+      // 이번 달 날짜 칸들
+      const todayISO = formatDateToISO(today);
+      for (let day = 1; day <= lastDate; day++) {
+        const currentISO = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const isToday = (currentISO === todayISO);
+        const isSelected = (currentISO === selectedDateISO);
+        
+        const cell = createDateCell(day, false, isToday, isSelected, currentISO);
+        grid.appendChild(cell);
+      }
+
+      // 다음 달 잔여 칸 채우기 (7배수 맞춤)
+      const totalCells = firstDayIndex + lastDate;
+      const nextMonthDays = (7 - (totalCells % 7)) % 7;
+      for (let day = 1; day <= nextMonthDays; day++) {
+        const cell = createDateCell(day, true, false, false, null);
+        grid.appendChild(cell);
+      }
+    }
+
+    function createDateCell(dayNum, isOtherMonth, isToday, isSelected, isoDate) {
+      const cell = document.createElement('div');
+      cell.className = `min-h-[76px] sm:min-h-[90px] p-1.5 sm:p-2 rounded-2xl border transition-all flex flex-col justify-between cursor-pointer relative group ${
+        isOtherMonth 
+          ? 'bg-mist-50/40 text-mist-300 border-transparent pointer-events-none' 
+          : isSelected 
+            ? 'bg-forest-100/90 border-forest-500 shadow-sm ring-2 ring-forest-400/40' 
+            : 'bg-white/70 hover:bg-white border-mist-200/60 hover:border-forest-300 shadow-xs'
+      }`;
+
+      if (!isOtherMonth && isoDate) {
+        cell.onclick = () => {
+          selectedDateISO = isoDate;
+          renderCalendar();
+          renderSelectedDateView();
+        };
+      }
+
+      // 날짜 숫자 라벨
+      const topRow = document.createElement('div');
+      topRow.className = "flex items-center justify-between";
+
+      const numSpan = document.createElement('span');
+      numSpan.className = `text-xs sm:text-sm font-semibold rounded-lg w-6 h-6 flex items-center justify-center ${
+        isToday 
+          ? 'bg-forest-800 text-leaf font-bold' 
+          : isSelected 
+            ? 'text-forest-900 font-bold' 
+            : 'text-mist-700'
+      }`;
+      numSpan.textContent = dayNum;
+      topRow.appendChild(numSpan);
+
+      // 해당 일자의 스케줄 닷/배지
+      const daySchedules = schedules.filter(s => s.date === isoDate);
+      if (daySchedules.length > 0) {
+        const countBadge = document.createElement('span');
+        countBadge.className = "text-[10px] font-bold text-forest-700 px-1 rounded bg-forest-100/80";
+        countBadge.textContent = `${daySchedules.length}`;
+        topRow.appendChild(countBadge);
+      }
+      cell.appendChild(topRow);
+
+      // 일정 칩 미리보기 (최대 2개)
+      const chipsContainer = document.createElement('div');
+      chipsContainer.className = "space-y-1 mt-1 overflow-hidden";
+
+      daySchedules.slice(0, 2).forEach(item => {
+        const chip = document.createElement('div');
+        const colorClass = getCategoryChipColor(item.category);
+        chip.className = `text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded truncate font-medium ${colorClass} ${item.completed ? 'line-through opacity-50' : ''}`;
+        chip.textContent = item.title;
+        chipsContainer.appendChild(chip);
+      });
+
+      if (daySchedules.length > 2) {
+        const moreSpan = document.createElement('div');
+        moreSpan.className = "text-[8px] text-mist-400 pl-1 font-semibold";
+        moreSpan.textContent = `+${daySchedules.length - 2}개 더`;
+        chipsContainer.appendChild(moreSpan);
+      }
+
+      cell.appendChild(chipsContainer);
+      return cell;
+    }
+
+    function changeMonth(delta) {
+      currentMonth += delta;
+      if (currentMonth < 0) {
+        currentMonth = 11;
+        currentYear--;
+      } else if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+      }
+      renderCalendar();
+    }
+
+    function goToToday() {
+      currentYear = today.getFullYear();
+      currentMonth = today.getMonth();
+      selectedDateISO = formatDateToISO(today);
+      renderAll();
+    }
+
+    /* -------------------------------------------------------------
+     * 5. 선택된 날짜 상세 패널 (Right Panel)
+     * ----------------------------------------------------------- */
+    function renderSelectedDateView() {
+      document.getElementById('selectedDateHeading').textContent = getKoreanDateLabel(selectedDateISO);
+      const container = document.getElementById('selectedDateScheduleList');
+      container.innerHTML = '';
+
+      const filtered = schedules.filter(s => s.date === selectedDateISO);
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="h-48 flex flex-col items-center justify-center text-center p-4 border border-dashed border-forest-200 rounded-2xl bg-forest-50/30">
+            <i class="fa-solid fa-leaf text-2xl text-forest-300 mb-2"></i>
+            <p class="text-xs text-mist-500 font-medium">등록된 일정이 없습니다.</p>
+            <p class="text-[11px] text-mist-400 mt-0.5">평화로운 휴식을 취하거나 새 일정을 더해보세요.</p>
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(item => {
+        const card = createScheduleCardElement(item);
+        container.appendChild(card);
+      });
+    }
+
+    function createScheduleCardElement(item) {
+      const card = document.createElement('div');
+      card.className = `p-3.5 rounded-2xl border transition-all ${
+        item.completed 
+          ? 'bg-mist-100/70 border-mist-200 text-mist-500' 
+          : 'bg-white hover:bg-forest-50/50 border-forest-200/70 shadow-xs'
+      }`;
+
+      const catBadge = getCategoryBadgeHTML(item.category);
+      const timeStr = item.startTime ? `${item.startTime} ${item.endTime ? '~ ' + item.endTime : ''}` : '하루 종일';
+
+      card.innerHTML = `
+        <div class="flex items-start justify-between gap-2">
+          <div class="flex items-start space-x-2.5 flex-1 min-w-0">
+            <button onclick="toggleComplete('${item.id}')" class="mt-0.5 w-5 h-5 rounded-lg border ${
+              item.completed 
+                ? 'bg-forest-700 border-forest-700 text-leaf flex items-center justify-center' 
+                : 'border-mist-300 hover:border-forest-500 bg-white'
+            } transition">
+              ${item.completed ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}
+            </button>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs sm:text-sm font-semibold truncate ${item.completed ? 'line-through text-mist-400' : 'text-forest-900'}">
+                ${escapeHTML(item.title)}
+              </p>
+              <div class="flex items-center space-x-2 mt-1 flex-wrap gap-y-1">
+                ${catBadge}
+                <span class="text-[11px] text-mist-400 flex items-center space-x-1">
+                  <i class="fa-regular fa-clock text-[10px]"></i>
+                  <span>${timeStr}</span>
+                </span>
+              </div>
+              ${item.notes ? `<p class="text-[11px] text-mist-500 mt-1.5 line-clamp-2 bg-mist-50 p-1.5 rounded-lg border border-mist-100">${escapeHTML(item.notes)}</p>` : ''}
+            </div>
+          </div>
+          <div class="flex items-center space-x-1">
+            <button onclick="editSchedule('${item.id}')" class="w-7 h-7 rounded-lg hover:bg-forest-100 text-mist-400 hover:text-forest-700 flex items-center justify-center transition" title="수정">
+              <i class="fa-solid fa-pen-to-square text-xs"></i>
+            </button>
+            <button onclick="deleteSchedule('${item.id}')" class="w-7 h-7 rounded-lg hover:bg-rose-50 text-mist-400 hover:text-rose-600 flex items-center justify-center transition" title="삭제">
+              <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
+          </div>
+        </div>
+      `;
+      return card;
+    }
+
+    /* -------------------------------------------------------------
+     * 6. 전체 목록 뷰 (Agenda View)
+     * ----------------------------------------------------------- */
+    function renderAgendaView() {
+      const container = document.getElementById('agendaListContainer');
+      container.innerHTML = '';
+
+      // 정렬 (날짜 순)
+      let list = [...schedules].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      // 필터 적용
+      if (activeFilterCategory !== 'all') {
+        list = list.filter(item => item.category === activeFilterCategory);
+      }
+      if (activeStatusFilter === 'pending') {
+        list = list.filter(item => !item.completed);
+      } else if (activeStatusFilter === 'completed') {
+        list = list.filter(item => item.completed);
+      }
+      if (activeSearchQuery.trim() !== '') {
+        const q = activeSearchQuery.toLowerCase();
+        list = list.filter(item => item.title.toLowerCase().includes(q) || (item.notes && item.notes.toLowerCase().includes(q)));
+      }
+
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div class="glass-card rounded-3xl p-12 text-center text-mist-400 border border-forest-200/60">
+            <i class="fa-solid fa-seedling text-4xl text-forest-300 mb-3 animate-float"></i>
+            <p class="text-sm font-semibold text-mist-600">조건에 맞는 일정이 없습니다.</p>
+            <p class="text-xs text-mist-400 mt-1">필터를 변경하거나 새로운 일정을 등록해 보세요.</p>
+          </div>
+        `;
+        return;
+      }
+
+      // 날짜별 그룹화
+      const grouped = {};
+      list.forEach(item => {
+        if (!grouped[item.date]) grouped[item.date] = [];
+        grouped[item.date].push(item);
+      });
+
+      Object.keys(grouped).forEach(dateStr => {
+        const groupWrapper = document.createElement('div');
+        groupWrapper.className = 'glass-card rounded-3xl p-5 border border-forest-200/60 shadow-xs space-y-3';
+        
+        groupWrapper.innerHTML = `
+          <div class="flex items-center space-x-2 pb-2 border-b border-forest-100">
+            <i class="fa-regular fa-calendar-check text-forest-600"></i>
+            <h4 class="text-sm font-bold text-forest-900">${getKoreanDateLabel(dateStr)}</h4>
+            <span class="text-xs bg-forest-100 text-forest-800 font-semibold px-2 py-0.5 rounded-full">${grouped[dateStr].length}개</span>
+          </div>
+        `;
+
+        const itemsDiv = document.createElement('div');
+        itemsDiv.className = 'grid grid-cols-1 md:grid-cols-2 gap-3';
+        grouped[dateStr].forEach(item => {
+          itemsDiv.appendChild(createScheduleCardElement(item));
+        });
+
+        groupWrapper.appendChild(itemsDiv);
+        container.appendChild(groupWrapper);
+      });
+    }
+
+    function setFilterCategory(cat) {
+      activeFilterCategory = cat;
+      document.querySelectorAll('.cat-filter-btn').forEach(btn => {
+        if (btn.dataset.cat === cat) {
+          btn.className = 'cat-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-forest-800 text-white transition';
+        } else {
+          btn.className = 'cat-filter-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-mist-100 text-mist-600 hover:bg-forest-100 transition';
+        }
+      });
+      renderAgendaView();
+    }
+
+    function handleSearch(val) {
+      activeSearchQuery = val;
+      renderAgendaView();
+    }
+
+    function handleStatusFilter(val) {
+      activeStatusFilter = val;
+      renderAgendaView();
+    }
+
+    /* -------------------------------------------------------------
+     * 7. 성장 숲 & 게이미피케이션 (Growth View)
+     * ----------------------------------------------------------- */
+    function renderGrowthGarden() {
+      const completedCount = schedules.filter(s => s.completed).length;
+      const totalCount = schedules.length;
+      
+      document.getElementById('totalCompletedTasksCount').textContent = `${completedCount}개`;
+      document.getElementById('forestEnergyPercent').textContent = `${completedCount * 30} XP`;
+
+      // 나무 단계 계산 (0: 씨앗, 1: 새싹, 2: 묘목, 3: 푸른 큰 나무, 4: 신비로운 거목)
+      let stage = 0;
+      if (completedCount >= 8) stage = 4;
+      else if (completedCount >= 5) stage = 3;
+      else if (completedCount >= 3) stage = 2;
+      else if (completedCount >= 1) stage = 1;
+
+      const stageLabels = [
+        "단계 0 : 흙 속의 잠든 씨앗 🌱",
+        "단계 1 : 싱그러운 새싹 돋움 🌿",
+        "단계 2 : 곧게 자라는 묘목 🪴",
+        "단계 3 : 푸르고 무성한 숲의 나무 🌲",
+        "단계 4 : 찬란한 생명의 거목 🌳✨"
+      ];
+      document.getElementById('treeStatusText').textContent = stageLabels[stage];
+
+      // 단계별 SVG 일러스트레이션 렌더링
+      const container = document.getElementById('treeGraphicContainer');
+      container.innerHTML = getTreeSVG(stage);
+
+      // 카테고리 통계
+      renderCategoryStats();
+    }
+
+    function getTreeSVG(stage) {
+      switch(stage) {
+        case 0:
+          return `
+            <svg width="180" height="180" viewBox="0 0 100 100">
+              <ellipse cx="50" cy="80" rx="35" ry="10" fill="#cbd5e1" />
+              <circle cx="50" cy="72" r="6" fill="#84cc16" />
+              <path d="M50 66 Q52 60 50 56" stroke="#65a30d" stroke-width="2" fill="none"/>
+            </svg>
+          `;
+        case 1:
+          return `
+            <svg width="180" height="180" viewBox="0 0 100 100">
+              <ellipse cx="50" cy="82" rx="35" ry="10" fill="#a5caa9" opacity="0.6"/>
+              <path d="M50 80 Q50 60 50 48" stroke="#3d7243" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+              <path d="M50 54 Q36 44 42 34 Q50 42 50 54" fill="#84cc16"/>
+              <path d="M50 50 Q64 40 58 30 Q50 38 50 50" fill="#a3e635"/>
+            </svg>
+          `;
+        case 2:
+          return `
+            <svg width="180" height="180" viewBox="0 0 100 100">
+              <ellipse cx="50" cy="84" rx="40" ry="10" fill="#76ac7c" opacity="0.5"/>
+              <path d="M50 82 Q48 55 50 38" stroke="#2a492e" stroke-width="5" stroke-linecap="round" fill="none"/>
+              <circle cx="50" cy="34" r="16" fill="#528f59" />
+              <circle cx="40" cy="38" r="12" fill="#84cc16" />
+              <circle cx="60" cy="38" r="12" fill="#a3e635" />
+              <circle cx="50" cy="24" r="10" fill="#bef264" />
+            </svg>
+          `;
+        case 3:
+          return `
+            <svg width="200" height="200" viewBox="0 0 120 120">
+              <ellipse cx="60" cy="100" rx="48" ry="12" fill="#325b37" opacity="0.4"/>
+              <path d="M60 98 Q56 65 60 42" stroke="#2a492e" stroke-width="8" stroke-linecap="round" fill="none"/>
+              <path d="M58 70 Q40 55 35 48" stroke="#2a492e" stroke-width="4" stroke-linecap="round" fill="none"/>
+              <path d="M62 64 Q80 52 85 45" stroke="#2a492e" stroke-width="4" stroke-linecap="round" fill="none"/>
+              <circle cx="60" cy="35" r="24" fill="#3d7243" />
+              <circle cx="38" cy="46" r="18" fill="#528f59" />
+              <circle cx="82" cy="46" r="18" fill="#84cc16" />
+              <circle cx="60" cy="22" r="16" fill="#a3e635" />
+              <circle cx="48" cy="30" r="10" fill="#d9f99d" opacity="0.9"/>
+            </svg>
+          `;
+        case 4:
+        default:
+          return `
+            <svg width="210" height="210" viewBox="0 0 120 120" class="animate-pulse-soft">
+              <ellipse cx="60" cy="102" rx="52" ry="14" fill="#1b3520" opacity="0.4"/>
+              <!-- 나무 기둥 -->
+              <path d="M60 100 Q54 60 60 38" stroke="#1b3520" stroke-width="10" stroke-linecap="round" fill="none"/>
+              <path d="M56 68 Q34 50 28 42" stroke="#1b3520" stroke-width="5" stroke-linecap="round" fill="none"/>
+              <path d="M64 60 Q90 46 96 38" stroke="#1b3520" stroke-width="5" stroke-linecap="round" fill="none"/>
+              <!-- 풍성한 잎 군락 -->
+              <circle cx="60" cy="34" r="28" fill="#2a492e" />
+              <circle cx="34" cy="44" r="20" fill="#3d7243" />
+              <circle cx="86" cy="44" r="20" fill="#528f59" />
+              <circle cx="60" cy="18" r="18" fill="#84cc16" />
+              <circle cx="44" cy="26" r="14" fill="#a3e635" />
+              <circle cx="76" cy="26" r="14" fill="#bef264" />
+              <!-- 반짝이는 빛 요정 -->
+              <circle cx="30" cy="25" r="2" fill="#fff" />
+              <circle cx="90" cy="20" r="2.5" fill="#fef08a" />
+              <circle cx="60" cy="8" r="2" fill="#fff" />
+            </svg>
+          `;
+      }
+    }
+
+    function renderCategoryStats() {
+      const cats = [
+        { key: 'work', label: '🌲 업무/학업', color: 'bg-forest-600' },
+        { key: 'routine', label: '🌿 일상/루틴', color: 'bg-leaf-glow' },
+        { key: 'wellness', label: '🍃 휴식/힐링', color: 'bg-emerald-500' },
+        { key: 'event', label: '🌸 약속/이벤트', color: 'bg-amber-500' },
+      ];
+
+      const container = document.getElementById('categoryStatsContainer');
+      container.innerHTML = '';
+
+      const total = schedules.length || 1;
+
+      cats.forEach(c => {
+        const count = schedules.filter(s => s.category === c.key).length;
+        const pct = Math.round((count / total) * 100);
+
+        const row = document.createElement('div');
+        row.className = 'space-y-1';
+        row.innerHTML = `
+          <div class="flex justify-between text-xs font-medium">
+            <span class="text-mist-700">${c.label}</span>
+            <span class="text-forest-800 font-bold">${count}개 (${pct}%)</span>
+          </div>
+          <div class="w-full bg-mist-200/80 rounded-full h-2 overflow-hidden">
+            <div class="${c.color} h-full rounded-full transition-all duration-700" style="width: ${pct}%"></div>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function updateTodaySummary() {
+      const todayISO = formatDateToISO(today);
+      const todayList = schedules.filter(s => s.date === todayISO);
+      const doneList = todayList.filter(s => s.completed);
+
+      const total = todayList.length;
+      const done = doneList.length;
+      const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+
+      document.getElementById('todayTotalCount').textContent = total;
+      document.getElementById('todayDoneCount').textContent = done;
+      document.getElementById('todayProgressBar').style.width = `${pct}%`;
+      document.getElementById('todayProgressText').textContent = `${pct}%`;
+    }
+
+    /* -------------------------------------------------------------
+     * 8. 일정 CRUD & 폼 핸들링
+     * ----------------------------------------------------------- */
+    function openScheduleModal(dateStr = null) {
+      const modal = document.getElementById('scheduleModal');
+      const card = document.getElementById('modalCard');
+      document.getElementById('scheduleForm').reset();
+      document.getElementById('editScheduleId').value = '';
+      document.getElementById('modalTitle').textContent = '새 일정 등록';
+      document.getElementById('modalSubmitText').textContent = '저장하기';
+      
+      document.getElementById('formDate').value = dateStr || selectedDateISO;
+
+      modal.classList.remove('hidden');
+      setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        card.classList.remove('scale-95');
+      }, 10);
+    }
+
+    function closeScheduleModal() {
+      const modal = document.getElementById('scheduleModal');
+      const card = document.getElementById('modalCard');
+      modal.classList.add('opacity-0');
+      card.classList.add('scale-95');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+      }, 300);
+    }
+
+    function handleScheduleSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('editScheduleId').value;
+      const title = document.getElementById('formTitle').value.trim();
+      const date = document.getElementById('formDate').value;
+      const startTime = document.getElementById('formStartTime').value;
+      const endTime = document.getElementById('formEndTime').value;
+      const category = document.getElementById('formCategory').value;
+      const priority = document.getElementById('formPriority').value;
+      const notes = document.getElementById('formNotes').value.trim();
+
+      if (!title || !date) return;
+
+      if (id) {
+        // 수정
+        const target = schedules.find(s => s.id === id);
+        if (target) {
+          target.title = title;
+          target.date = date;
+          target.startTime = startTime;
+          target.endTime = endTime;
+          target.category = category;
+          target.priority = priority;
+          target.notes = notes;
+        }
+        showToast("일정이 성공적으로 수정되었습니다.");
+      } else {
+        // 새로 생성
+        const newSched = {
+          id: 'task-' + Date.now(),
+          title,
+          date,
+          startTime,
+          endTime,
+          category,
+          priority,
+          notes,
+          completed: false
+        };
+        schedules.push(newSched);
+        showToast("새로운 일정이 숲에 심어졌습니다.");
+      }
+
+      closeScheduleModal();
+      selectedDateISO = date;
+      renderAll();
+    }
+
+    function handleQuickAdd(e) {
+      e.preventDefault();
+      const input = document.getElementById('quickTaskInput');
+      const val = input.value.trim();
+      if (!val) return;
+
+      const newSched = {
+        id: 'task-' + Date.now(),
+        title: val,
+        date: selectedDateISO,
+        startTime: '',
+        endTime: '',
+        category: 'routine',
+        priority: 'medium',
+        notes: '',
+        completed: false
+      };
+      schedules.push(newSched);
+      input.value = '';
+      showToast("할 일이 빠르게 추가되었습니다.");
+      renderAll();
+    }
+
+    function editSchedule(id) {
+      const item = schedules.find(s => s.id === id);
+      if (!item) return;
+
+      document.getElementById('editScheduleId').value = item.id;
+      document.getElementById('formTitle').value = item.title;
+      document.getElementById('formDate').value = item.date;
+      document.getElementById('formStartTime').value = item.startTime || '';
+      document.getElementById('formEndTime').value = item.endTime || '';
+      document.getElementById('formCategory').value = item.category || 'routine';
+      document.getElementById('formPriority').value = item.priority || 'medium';
+      document.getElementById('formNotes').value = item.notes || '';
+
+      document.getElementById('modalTitle').textContent = '일정 내용 수정';
+      document.getElementById('modalSubmitText').textContent = '수정 완료';
+
+      const modal = document.getElementById('scheduleModal');
+      const card = document.getElementById('modalCard');
+      modal.classList.remove('hidden');
+      setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        card.classList.remove('scale-95');
+      }, 10);
+    }
+
+    function deleteSchedule(id) {
+      schedules = schedules.filter(s => s.id !== id);
+      showToast("일정이 삭제되었습니다.", "info");
+      renderAll();
+    }
+
+    function toggleComplete(id) {
+      const item = schedules.find(s => s.id === id);
+      if (item) {
+        item.completed = !item.completed;
+        if (item.completed) {
+          showToast(`"${item.title}" 완료! 나무가 자랍니다 🌿`);
+        }
+        renderAll();
+      }
+    }
+
+    /* -------------------------------------------------------------
+     * 9. 뷰 모드 전환 (Tab Switcher)
+     * ----------------------------------------------------------- */
+    function switchView(mode) {
+      const views = {
+        month: document.getElementById('monthViewSection'),
+        agenda: document.getElementById('agendaViewSection'),
+        growth: document.getElementById('growthViewSection'),
+        focus: document.getElementById('focusViewSection'),
+      };
+      const buttons = {
+        month: document.getElementById('viewMonthBtn'),
+        agenda: document.getElementById('viewAgendaBtn'),
+        growth: document.getElementById('viewGrowthBtn'),
+        focus: document.getElementById('viewFocusBtn'),
+      };
+
+      Object.keys(views).forEach(k => {
+        if (k === mode) {
+          views[k].classList.remove('hidden');
+          buttons[k].className = 'px-3.5 py-1.5 text-xs sm:text-sm font-medium rounded-xl transition-all flex items-center space-x-1.5 bg-white text-forest-800 shadow-sm';
+        } else {
+          views[k].classList.add('hidden');
+          buttons[k].className = 'px-3.5 py-1.5 text-xs sm:text-sm font-medium rounded-xl transition-all flex items-center space-x-1.5 text-mist-600 hover:text-forest-700';
+        }
+      });
+
+      if (mode === 'agenda') renderAgendaView();
+      if (mode === 'growth') renderGrowthGarden();
+    }
+
+    /* -------------------------------------------------------------
+     * 10. 포모도로 타이머 로직
+     * ----------------------------------------------------------- */
+    let timerDuration = 25 * 60;
+    let timerRemaining = 25 * 60;
+    let timerInterval = null;
+    let isTimerRunning = false;
+
+    function updateTimerUI() {
+      const minutes = Math.floor(timerRemaining / 60);
+      const seconds = timerRemaining % 60;
+      document.getElementById('timerDisplay').textContent = 
+        `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+      const circle = document.getElementById('timerCircle');
+      const totalDash = 276.46; // 2 * PI * 44
+      const progress = (timerDuration - timerRemaining) / timerDuration;
+      circle.style.strokeDashoffset = totalDash * (1 - progress);
+    }
+
+    function toggleTimer() {
+      if (isTimerRunning) {
+        clearInterval(timerInterval);
+        isTimerRunning = false;
+        document.getElementById('timerBtnText').textContent = '이어하기';
+        document.getElementById('timerBtnIcon').className = 'fa-solid fa-play text-leaf';
+      } else {
+        isTimerRunning = true;
+        document.getElementById('timerBtnText').textContent = '일시정지';
+        document.getElementById('timerBtnIcon').className = 'fa-solid fa-pause text-leaf';
+
+        timerInterval = setInterval(() => {
+          if (timerRemaining > 0) {
+            timerRemaining--;
+            updateTimerUI();
+          } else {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            showToast("집중 시간이 끝났습니다! 가벼운 심호흡을 하세요 🍃");
+            resetTimer();
+          }
+        }, 1000);
+      }
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      isTimerRunning = false;
+      timerRemaining = timerDuration;
+      document.getElementById('timerBtnText').textContent = '시작하기';
+      document.getElementById('timerBtnIcon').className = 'fa-solid fa-play text-leaf';
+      updateTimerUI();
+    }
+
+    function setTimerDuration(mins, modeName) {
+      clearInterval(timerInterval);
+      isTimerRunning = false;
+      timerDuration = mins * 60;
+      timerRemaining = timerDuration;
+      
+      const labels = {
+        focus: '집중 모드',
+        deep: '딥워크 몰입',
+        shortBreak: '짧은 휴식',
+        longBreak: '숲속 산책'
+      };
+      document.getElementById('timerModeLabel').textContent = labels[modeName] || '타이머';
+      document.getElementById('timerBtnText').textContent = '시작하기';
+      document.getElementById('timerBtnIcon').className = 'fa-solid fa-play text-leaf';
+      updateTimerUI();
+    }
+
+    /* -------------------------------------------------------------
+     * 11. Web Audio API 기반 숲속 앰비언스 사운드 (외부 파일 의존 없음)
+     * ----------------------------------------------------------- */
+    let audioCtx = null;
+    let isSoundPlaying = false;
+    let soundNodes = [];
+
+    function toggleForestSound() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+
+      if (isSoundPlaying) {
+        // 정지
+        soundNodes.forEach(node => {
+          try { node.stop(); } catch(e) {}
+          try { node.disconnect(); } catch(e) {}
+        });
+        soundNodes = [];
+        isSoundPlaying = false;
+        document.getElementById('ambientIcon').className = 'fa-solid fa-volume-xmark text-sm';
+        document.getElementById('ambientSoundBtn').classList.remove('bg-forest-700', 'text-leaf');
+        showToast("숲의 소리가 멈췄습니다.");
+      } else {
+        // 재생: 숲속 바람소리 화이트 노이즈 & 간헐적 새 지저귐 사운드 합성
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume();
+        }
+        startSynthesizedForestAmbience();
+        isSoundPlaying = true;
+        document.getElementById('ambientIcon').className = 'fa-solid fa-volume-high text-sm animate-pulse';
+        document.getElementById('ambientSoundBtn').classList.add('bg-forest-700', 'text-leaf');
+        showToast("잔잔한 숲속 앰비언스가 켜졌습니다 🍃");
+      }
+    }
+
+    function startSynthesizedForestAmbience() {
+      // 1. 부드러운 바람(Pink Noise) 시뮬레이션
+      const bufferSize = audioCtx.sampleRate * 2;
+      const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const output = noiseBuffer.getChannelData(0);
+      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+      for (let i = 0; i < bufferSize; i++) {
+        const white = Math.random() * 2 - 1;
+        b0 = 0.99886 * b0 + white * 0.0555179;
+        b1 = 0.99332 * b1 + white * 0.0750759;
+        b2 = 0.96900 * b2 + white * 0.1538520;
+        b3 = 0.86650 * b3 + white * 0.3104856;
+        b4 = 0.55000 * b4 + white * 0.5329522;
+        b5 = -0.7616 * b5 - white * 0.0168980;
+        output[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.04;
+        b6 = white * 0.115926;
+      }
+
+      const whiteNoise = audioCtx.createBufferSource();
+      whiteNoise.buffer = noiseBuffer;
+      whiteNoise.loop = true;
+
+      // 필터 적용 (바람결 같은 로우패스)
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 400;
+
+      const gainNode = audioCtx.createGain();
+      gainNode.gain.value = 0.4;
+
+      whiteNoise.connect(filter);
+      filter.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      whiteNoise.start();
+      soundNodes.push(whiteNoise);
+    }
+
+    /* -------------------------------------------------------------
+     * 12. 유틸리티 & 토스트 알림
+     * ----------------------------------------------------------- */
+    function showToast(msg, type = "success") {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMessage');
+      const toastIcon = document.getElementById('toastIcon');
+
+      toastMsg.textContent = msg;
+      if (type === 'info') {
+        toastIcon.className = 'fa-solid fa-circle-info text-mist-300';
+      } else {
+        toastIcon.className = 'fa-solid fa-circle-check text-leaf';
+      }
+
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2600);
+    }
+
+    function getCategoryBadgeHTML(cat) {
+      switch(cat) {
+        case 'work':
+          return `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-forest-100 text-forest-800 border border-forest-200">🌲 업무/학업</span>`;
+        case 'wellness':
+          return `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">🍃 휴식/힐링</span>`;
+        case 'event':
+          return `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">🌸 약속/이벤트</span>`;
+        case 'routine':
+        default:
+          return `<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-leaf-light/80 text-forest-900 border border-leaf/40">🌿 일상/루틴</span>`;
+      }
+    }
+
+    function getCategoryChipColor(cat) {
+      switch(cat) {
+        case 'work': return 'bg-forest-100 text-forest-800';
+        case 'wellness': return 'bg-emerald-100 text-emerald-800';
+        case 'event': return 'bg-amber-100 text-amber-800';
+        case 'routine':
+        default: return 'bg-leaf-light/90 text-forest-900';
+      }
+    }
+
+    function escapeHTML(str) {
+      if (!str) return '';
+      return str.replace(/[&<>'"]/g, 
+        tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+      );
+    }
+  </script>
+</body>
+</html>
